@@ -59,9 +59,12 @@ let rec expand (cube:Cube) (quadrant:Quadrant) =
             let pos = top.Pos
             let left : QPos = snd top.NE |> oppositeDirection |> stepDir pos 
             let right : QPos = snd top.NE |> stepDir pos 
-            let rear : QPos = fst top.NE |> stepDir pos 
-            let front : QPos = fst top.NE |> oppositeDirection |> stepDir pos 
-            printfn $"calculated front from top: {pos}"
+            let north : QPos = fst top.NE |> stepDir pos 
+            let south : QPos = fst top.NE |> oppositeDirection |> stepDir pos
+            let cube = addSideIfPossible cube quadrant Back north (fst top.NE |> oppositeDirection,snd top.NE)
+            let cube = addSideIfPossible cube quadrant Left left (snd top.NE,fst top.NE)
+            let cube = addSideIfPossible cube quadrant Right right (snd top.NE |> oppositeDirection,fst top.NE)
+            printfn $"calculated front from top: {pos} front={south}"
             printfn "Skipping stuff"
             expand1 cube rest 
         | Bottom::rest ->
