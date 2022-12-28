@@ -8,7 +8,6 @@ let private findSideLength (lines:string list) : int =
     let width = lines |> List.map String.length |> List.max
     let size : int = gcd width height
     let size = if (width/size) * (height/size) < 9 then size / 2 else size
-    printfn $"parseCube.findSizeLength: width,height = {width},{height} {size}"
     size 
 
 let mapToCoordinates (side: string list) : Option<Set<int*int>> =
@@ -19,7 +18,6 @@ let mapToCoordinates (side: string list) : Option<Set<int*int>> =
         let side = side |> List.collect (fun (y,chars) -> chars |> List.map (fun (x,c) -> (x,y),c))
         let side = side |> List.filter (fun xyc -> snd xyc = '.') |> List.map fst 
         let side = side |> Set.ofList 
-        printfn $"mapToCoordinates: side={side}"
         Some(side)
 
 let private splitSides (size:int) (input:string list) =
@@ -50,7 +48,6 @@ let parseQuadrant (lines: string list) =
     let sides = sides |> List.map (fun row -> row |> List.map mapToCoordinates)
     let sides = addQuadrant sides
     let map = toQuadrantMap sides 
-    printfn $"parseQuadrant: {map}"
     Quadrant(map)
 
     

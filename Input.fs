@@ -8,8 +8,6 @@ let parseCommands (commands: string) =
     let toDigit (c: char) = c - '0' |> int
 
     let rec parse (curr: int) (commands: char list) =
-        printfn $"parse {curr} {commands}"
-
         match commands with
         | [] -> []
         | 'L' :: rest ->

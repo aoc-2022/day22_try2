@@ -7,4 +7,5 @@ printfn $"{input.Map} {input.Commands}"
 
 let quadrant = QuadrantParser.parseQuadrant input.Map
 
-CubeAssembly.assembleCube quadrant
+let cube = CubeAssembly.assembleCube quadrant
+printfn $"cube: {cube.ToLongString()}"
