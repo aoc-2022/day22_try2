@@ -9,7 +9,7 @@ let parseCommands (commands: string) =
 
     let rec parse (curr: int) (commands: char list) =
         match commands with
-        | [] -> []
+        | [] -> if curr = 0 then [] else [Steps curr]
         | 'L' :: rest ->
             let tail = TurnLeft :: parse 0 rest
             if curr > 0 then Steps curr :: tail else tail
