@@ -8,5 +8,8 @@ let quadrant = parseQuadrant input.Map
 let cube = CubeAssembly.assembleCube quadrant
 printfn $"cube: {cube.ToLongString()}"
 
-let result = Walker.walkAlongCube cube input.Commands
-printfn $"result: {result}"
+let resultState = Walker.walkAlongCube cube input.Commands
+printfn $"result: {resultState}"
+let score = Score.score resultState
+
+printfn $"Final score: {score}"

@@ -182,6 +182,7 @@ let private step (state: WalkState) =
             let edgePos = getEdgePos state.Cube.SideLength state.Pos state.Facing state.NE
 
             let flip = shouldFlipEntryPoint state newLoc newEdge
+            let edgePos = if flip then state.Cube.SideLength - 1 - edgePos else edgePos 
 
             let newDir, newPos =
                 incomingPosDir state.Cube.SideLength edgePos newEdge (state.Cube.Sides[newLoc].NE)
@@ -196,10 +197,11 @@ let private step (state: WalkState) =
 let walkAlongCube (cube: Cube) (commands: Command list) =
     let state = WalkState(cube, commands, Front, (0, 0), East)
 
-    let rec nsteps (n: int) (state: WalkState) =
-        if n = 0 then state else step state |> nsteps (n - 1)
+    let rec nsteps (state: WalkState) =
+        if state.Commands.IsEmpty then state
+        else step state |> nsteps
 
-    printfn $"State(1) {state}"
-    let state = nsteps 38 state
-    printfn $"State({8}) {state}"
-    1
+    printfn $"State(Start) {state}"
+    let state = nsteps state
+    printfn $"State(End) {state}"
+    state
