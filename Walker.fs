@@ -79,8 +79,17 @@ let nextStep (state: WalkState) : RPos =
     | (x, y), North -> (x, y - 1)
     | (x, y), South -> (x, y + 1)
 
-let getEdgePos ((x, y): RPos) (dir: Direction) (ne:NorthEast) =
-    printfn $"getEdgePos ({(x,y)} {dir} {ne}"
+let sideIsFlipped (ne: NorthEast) =
+    match ne with
+    | (North, West) -> true
+    | (South, East) -> true
+    | (East, North) -> true
+    | (West, South) -> true
+    | _ -> false
+
+let getEdgePos (size: int) ((x, y): RPos) (dir: Direction) (ne: NorthEast) =
+    printfn $"getEdgePos ({(x, y)} {dir} {ne} flipped={sideIsFlipped ne}"
+
     match dir with
     | North -> x
     | South -> x
@@ -115,14 +124,37 @@ let incomingPosDir (size: int) (edgePos: int) (inEdge: Direction) ((n, e): North
 
     (oppositeDirection realEdge), pos
 
-let nextRPos (pos: RPos) (fromDir: Direction) (toDir: Direction) (toNE: NorthEast) = 1
-
-let relativeFacing (facing:Direction) ((n,e):NorthEast) =
+let relativeFacing (facing: Direction) ((n, e): NorthEast) =
     match facing with
     | North -> n
     | South -> n |> oppositeDirection
     | East -> e
     | West -> e |> oppositeDirection
+
+let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Direction) =
+    let fromNE = state.Side.NE
+    let toNE = state.Cube.Sides[dest].NE
+    let adjustedEntryEdge = 
+        match entryEdge,toNE with
+        | North,(n,_) -> n
+        | South,(n,_) -> n |> oppositeDirection
+        | East,(_,e) -> e
+        | West,(_,e) -> e |> oppositeDirection
+    let isDiagonalMove =
+        match state.Facing,adjustedEntryEdge with
+        | ns,ew when (ns = North || ns = South ) -> ew = East || ew = West
+        | ew,ns when (ew = East || ew = West) -> ns = North || ns = South
+    let flippedOut =
+        match state.Facing,fromNE with
+        | ns,(x,y) when (ns = North || ns = South) -> x = West || y = West
+        | ew,(x,y) when (ew = East || ew = West) -> x = South || y = South
+    let flippedIn =
+        match entryEdge,fromNE with
+        | ns,(x,y) when (ns = North || ns = South) -> x = West || y = West
+        | ew,(x,y) when (ew = East || ew = West) -> x = South || y = South
+    let flip = isDiagonalMove <> flippedOut <> flippedIn 
+    printfn $"shouldFlipEntryPoint {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} diag={isDiagonalMove} flip={flip} {adjustedEntryEdge}"
+    flip
 
 let private step (state: WalkState) =
     match state.Commands with
@@ -147,7 +179,9 @@ let private step (state: WalkState) =
         else
             let relFacing = relativeFacing state.Facing state.NE
             let newLoc, newEdge = nextLocation state.Location relFacing
-            let edgePos = getEdgePos state.Pos state.Facing state.NE 
+            let edgePos = getEdgePos state.Cube.SideLength state.Pos state.Facing state.NE
+
+            let flip = shouldFlipEntryPoint state newLoc newEdge
 
             let newDir, newPos =
                 incomingPosDir state.Cube.SideLength edgePos newEdge (state.Cube.Sides[newLoc].NE)
