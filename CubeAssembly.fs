@@ -109,7 +109,7 @@ let assembleCube (quadrant:Quadrant) =
     let frontPos = findStartSide quadrant
     let tiles: Grid = quadrant.Map[frontPos]
     let frontSide = Side(frontPos,tiles,Front,Map.empty,(North,East))
-    let cube = Cube.init frontSide
+    let cube = Cube.init frontSide quadrant.SideLength
     let rec expandCube (cube:Cube) =
         expand cube quadrant
     let cube = expandCube cube
