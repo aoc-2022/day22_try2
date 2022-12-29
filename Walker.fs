@@ -128,7 +128,7 @@ let private step (state: WalkState) =
             if state.Cube.Sides[ state.Location ].Tiles.Contains next then
                 WalkState(state.Cube, Steps(n - 1) :: rest, state.Location, next, state.Facing)
             else
-                printfn $"blocker at {state.Pos} throwing away Steps {n}"
+                printfn $"blocker at {state.Pos} -> {next} throwing away Steps {n}"
                 WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
         else
             let (newLoc, newDir) = nextLocation state.Location state.Facing
@@ -138,6 +138,7 @@ let private step (state: WalkState) =
                 incomingPosDir state.Cube.SideLength edgePos newDir (state.Cube.Sides[newLoc].NE)
 
             if state.Cube.Sides[ newLoc ].Tiles.Contains newPos then
+                printfn $"Jumped to {newLoc} {newDir} {newPos}"
                 WalkState(state.Cube, Steps(n - 1) :: rest, newLoc, newPos, newDir)
             else
                 printfn $"Blocked when trying to enter {newLoc} from {state}"
@@ -150,6 +151,6 @@ let walkAlongCube (cube: Cube) (commands: Command list) =
         if n = 0 then state else step state |> nsteps (n - 1)
 
     printfn $"State(1) {state}"
-    let state = nsteps 18 state
+    let state = nsteps 28 state
     printfn $"State({8}) {state}"
     1
