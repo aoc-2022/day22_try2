@@ -14,7 +14,6 @@ let addSideIfPossible (cube:Cube) (quadrant:Quadrant) (location:Location) (pos:Q
     let side = cube.Side location
     if side.IsNone && quadrant.Map.ContainsKey pos then
         let side = Side(pos,quadrant.Map[pos],location,Map.empty,ne)
-        printfn $"Adding {side}"
         cube.AddSide (location,side) 
     else cube 
         
@@ -48,7 +47,6 @@ let rec expand (cube:Cube) (quadrant:Quadrant) =
             let right : QPos = snd top.NE |> stepDir pos 
             let north : QPos = fst top.NE |> stepDir pos 
             let south : QPos = fst top.NE |> oppositeDirection |> stepDir pos
-            printfn $"Top: {pos} {top.NE} left={left} right={right} north={north} south={south}"
             let cube = addSideIfPossible cube quadrant Back north (fst top.NE |> oppositeDirection,snd top.NE)
             let cube = addSideIfPossible cube quadrant Left left (snd top.NE,fst top.NE)
             let cube = addSideIfPossible cube quadrant Right right (snd top.NE |> oppositeDirection,fst top.NE)
@@ -60,7 +58,6 @@ let rec expand (cube:Cube) (quadrant:Quadrant) =
             let right = snd bottom.NE |> stepDir pos 
             let front = fst bottom.NE |> oppositeDirection |> stepDir pos 
             let back = fst bottom.NE |> stepDir pos
-            printfn $"bottom: left={left} right={right} front={front} back={back}"
             let cube = addSideIfPossible cube quadrant Left left (snd bottom.NE |> oppositeDirection,fst bottom.NE)
             let cube = addSideIfPossible cube quadrant Right right (snd bottom.NE, fst bottom.NE)
             let cube = addSideIfPossible cube quadrant Back back bottom.NE 
@@ -72,7 +69,6 @@ let rec expand (cube:Cube) (quadrant:Quadrant) =
             let right = snd back.NE |> stepDir pos 
             let north = fst back.NE |> stepDir pos 
             let south = fst back.NE |> oppositeDirection |> stepDir pos
-            printfn $"back: {pos} {back.NE} left={left} right={right} north={north} south={south}"
             let cube = addSideIfPossible cube quadrant Right right (fst back.NE, snd back.NE |> oppositeDirection)
             let cube = addSideIfPossible cube quadrant Left left back.NE 
             let cube = addSideIfPossible cube quadrant Top north (fst back.NE |> oppositeDirection, snd back.NE |> oppositeDirection)
@@ -85,7 +81,6 @@ let rec expand (cube:Cube) (quadrant:Quadrant) =
             let right = snd left.NE |> stepDir pos
             let north = fst left.NE |> stepDir pos 
             let south = fst left.NE |> oppositeDirection |> stepDir pos
-            printfn $"Left: {pos} {left.NE} left={leftDir} right={right} north={north} south={south}"
             let cube = addSideIfPossible cube quadrant Back leftDir left.NE
             let cube = addSideIfPossible cube quadrant Front right (fst left.NE, snd left.NE |> oppositeDirection)
             let cube = addSideIfPossible cube quadrant Top north (snd left.NE, fst left.NE)

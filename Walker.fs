@@ -84,23 +84,23 @@ let getEdgePos ((x, y): RPos) (dir: Direction) =
     | East -> y
     | West -> y
 
-let incomingPosDir (size: int) (edgePos: int) (inDir: Direction) ((n, e): NorthEast) : Direction * RPos =
-    let realDir =
-        match inDir with
+let incomingPosDir (size: int) (edgePos: int) (inEdge: Direction) ((n, e): NorthEast) : Direction * RPos =
+    let realEdge =
+        match inEdge with
         | North -> n
         | South -> n |> oppositeDirection
         | East -> e
         | West -> e |> oppositeDirection
 
     let posDir =
-        match inDir with
+        match inEdge with
         | North -> e
         | South -> e
         | East -> n
         | West -> n
 
     let pos =
-        match realDir, posDir with // this is likely all wrong
+        match realEdge, posDir with // this is likely all wrong
         | North, East -> (edgePos, 0)
         | North, West -> (size - 1 - edgePos, 0)
         | South, East -> (edgePos, size - 1)
@@ -110,32 +110,44 @@ let incomingPosDir (size: int) (edgePos: int) (inDir: Direction) ((n, e): NorthE
         | West, North -> (0, size - 1 - edgePos)
         | West, South -> (0, edgePos)
 
-    realDir, pos
+    (oppositeDirection realEdge), pos
 
 let nextRPos (pos: RPos) (fromDir: Direction) (toDir: Direction) (toNE: NorthEast) = 1
 
+let relativeFacing (facing:Direction) ((n,e):NorthEast) =
+    match facing with
+    | North -> n
+    | South -> n |> oppositeDirection
+    | East -> e
+    | West -> e |> oppositeDirection
 
 let private step (state: WalkState) =
     match state.Commands with
-    | TurnRight :: rest -> WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnRight)
-    | TurnLeft :: rest -> WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnLeft)
+    | TurnRight :: rest ->
+        printfn $"Turn right at {state.Location} {state.Pos}"
+        WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnRight)
+    | TurnLeft :: rest ->
+        printfn $"Turn left at {state.Location} {state.Pos}"
+        WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnLeft)
     | Steps 0 :: rest -> WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
     | Steps n :: rest ->
         if nextStepWithinBounds state then
             let next: RPos = nextStep state
-            printfn $"safe: {state} step {n} -> {next}"
+            // printfn $"safe: {state} step {n} -> {next}"
 
             if state.Cube.Sides[ state.Location ].Tiles.Contains next then
+                printfn $"Move to {next} {state.Location}"
                 WalkState(state.Cube, Steps(n - 1) :: rest, state.Location, next, state.Facing)
             else
-                printfn $"blocker at {state.Pos} -> {next} throwing away Steps {n}"
+                printfn $"blocked by {next} {state.Location}"
                 WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
         else
-            let (newLoc, newDir) = nextLocation state.Location state.Facing
+            let relFacing = relativeFacing state.Facing state.Cube.Sides[state.Location].NE
+            let (newLoc, newEdge) = nextLocation state.Location relFacing
             let edgePos = getEdgePos state.Pos state.Facing
 
             let (newDir, newPos) =
-                incomingPosDir state.Cube.SideLength edgePos newDir (state.Cube.Sides[newLoc].NE)
+                incomingPosDir state.Cube.SideLength edgePos newEdge (state.Cube.Sides[newLoc].NE)
 
             if state.Cube.Sides[ newLoc ].Tiles.Contains newPos then
                 printfn $"Jumped to {newLoc} {newDir} {newPos}"
@@ -151,6 +163,6 @@ let walkAlongCube (cube: Cube) (commands: Command list) =
         if n = 0 then state else step state |> nsteps (n - 1)
 
     printfn $"State(1) {state}"
-    let state = nsteps 28 state
+    let state = nsteps 38 state
     printfn $"State({8}) {state}"
     1
