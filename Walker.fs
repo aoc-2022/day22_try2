@@ -11,6 +11,8 @@ type WalkState(cube: Cube, commands: Command list, location: Location, pos: RPos
     member this.Location = location
     member this.Facing = facing
     member this.Pos = pos
+    member this.NE = cube.Sides[location].NE
+    member this.Side = cube.Sides[location]
 
     override this.ToString() =
         let nextCommand = if commands.IsEmpty then "[]" else $"{commands.Head}"
@@ -77,7 +79,8 @@ let nextStep (state: WalkState) : RPos =
     | (x, y), North -> (x, y - 1)
     | (x, y), South -> (x, y + 1)
 
-let getEdgePos ((x, y): RPos) (dir: Direction) =
+let getEdgePos ((x, y): RPos) (dir: Direction) (ne:NorthEast) =
+    printfn $"getEdgePos ({(x,y)} {dir} {ne}"
     match dir with
     | North -> x
     | South -> x
@@ -142,11 +145,11 @@ let private step (state: WalkState) =
                 printfn $"blocked by {next} {state.Location}"
                 WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
         else
-            let relFacing = relativeFacing state.Facing state.Cube.Sides[state.Location].NE
-            let (newLoc, newEdge) = nextLocation state.Location relFacing
-            let edgePos = getEdgePos state.Pos state.Facing
+            let relFacing = relativeFacing state.Facing state.NE
+            let newLoc, newEdge = nextLocation state.Location relFacing
+            let edgePos = getEdgePos state.Pos state.Facing state.NE 
 
-            let (newDir, newPos) =
+            let newDir, newPos =
                 incomingPosDir state.Cube.SideLength edgePos newEdge (state.Cube.Sides[newLoc].NE)
 
             if state.Cube.Sides[ newLoc ].Tiles.Contains newPos then
