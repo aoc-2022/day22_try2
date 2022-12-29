@@ -57,6 +57,41 @@ let nextStep (state: WalkState) : RPos =
     | (x, y), North -> (x, y - 1)
     | (x, y), South -> (x, y + 1)
 
+let getEdgePos ((x,y):RPos) (dir:Direction) =
+    match dir with
+    | North -> x
+    | South -> x
+    | East -> y
+    | West -> y
+
+let incomingPos (size:int) (edgePos:int) (inDir:Direction) ((n,e):NorthEast) =
+    let realDir =
+        match inDir with
+        | North -> n
+        | South -> n |> oppositeDirection
+        | East -> e
+        | West -> e |> oppositeDirection
+    let posDir =
+        match inDir with
+        | North -> e
+        | South -> e
+        | East -> n
+        | West -> n
+    match realDir,posDir with // this is all wrong
+        | North,East -> (edgePos,0)
+        | North,West -> (size - 1 - edgePos,0)
+        | South,East -> (edgePos,size-1)
+        | South,West -> (size - 1 - edgePos,size - 1)
+        | East,North -> (0,size - 1 - edgePos)
+        | East,South -> (0,edgePos)
+        | West,North -> (size - 1,size - 1 - edgePos)
+        
+        
+        
+        
+
+let nextRPos (pos:RPos) (fromDir:Direction) (toDir:Direction) (toNE:NorthEast) = 1
+    
 
 let private step (state: WalkState) =
     match state.Commands with
@@ -73,7 +108,8 @@ let private step (state: WalkState) =
                printfn $"blocker at {state.Pos} throwing away Steps {n}"
                WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)  
         else
-            printfn $"unsafe: {state}"
+            let (newLoc,newDir) = nextLocation state.Location state.Facing
+            printfn $"unsafe: {state} next={newLoc},{newDir}"
             state
 
 let walkAlongCube (cube: Cube) (commands: Command list) =
