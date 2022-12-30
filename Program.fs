@@ -1,7 +1,7 @@
 ﻿open day22_try2
 open day22_try2.QuadrantParser
 
-let input = Input.readFile "/tmp/aoc/input.22.t.open"
+let input = Input.readFile "/tmp/aoc/input.22.t"
 // let input = Input.readFile "/tmp/aoc/input.open"
 // let input = Input.readFile "/tmp/aoc/input.22.t.open"
 // let input = Input.readFile "/tmp/aoc/input"
@@ -20,5 +20,5 @@ let runTest () =
     let state = Walker.walkAlongCube cube []
     TestWalker.testAll state
 
-// runActual ()
-runTest ()
+runActual ()
+// runTest ()

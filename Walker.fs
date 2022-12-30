@@ -150,14 +150,14 @@ let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Directi
         | ew, (x, y) when (ew = East || ew = West) -> x = North || y = North
 
     let flippedIn =
-        match entryEdge, fromNE with
+        match adjustedEntryEdge, toNE with
         | ns, (x, y) when (ns = North || ns = South) -> x = West || y = West
         | ew, (x, y) when (ew = East || ew = West) -> x = North || y = North
 
     let flip = flippedOut <> flippedIn
 
-    printfn
-        $"shouldFlipEntryPoint {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} diag={isDiagonalMove} flip={flip} {adjustedEntryEdge}"
+    printfn $"shouldFlipEntryPoint(1) {dest}:{entryEdge} adj:{adjustedEntryEdge} {toNE} {flippedIn}"
+    printfn $"shouldFlipEntryPoint(2) {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} diag={isDiagonalMove} flip={flip} {adjustedEntryEdge}"
 
     flip
 
@@ -191,6 +191,7 @@ let step (state: WalkState) =
 
             let edgePos =
                 if flip then
+                    printfn $"flipping: {state.Pos} {state.Facing}"
                     state.Cube.SideLength - 1 - edgePos
                 else
                     edgePos

@@ -50,4 +50,4 @@ let testLocation (state: WalkState) (location: Location) =
 let testAll (state: WalkState) =
     let locations = state.Cube.Sides.Keys |> Seq.toList
     locations |> List.map (testLocation state)
-    // testLocation state Right
+    // testLocation state Bottom 
