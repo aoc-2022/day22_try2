@@ -36,7 +36,7 @@ let nextLocation (location: Location) (dir: Direction) : Location * Direction =
     match location, dir with
     | Front, North -> Top, South
     | Front, East -> Right, West
-    | Front, West -> Left, East
+    | Front, West -> Left, West
     | Front, South -> Bottom, South
     | Top, South -> Front, North
     | Top, West -> Left, North
@@ -47,20 +47,17 @@ let nextLocation (location: Location) (dir: Direction) : Location * Direction =
     | Bottom, West -> Left, South
     | Bottom, East -> Right, South
     | Back, North -> Top, North
-    | Back, South -> Bottom, South
+    | Back, South -> Bottom, North
     | Back, West -> Left, East
     | Back, East -> Right, East
     | Left, North -> Top, West
     | Left, South -> Bottom, West
     | Left, West -> Front, West
-    | Left, East -> Back, East
+    | Left, East -> Back, West
     | Right, North -> Top, East
     | Right, South -> Bottom, East
     | Right, West -> Front, East
     | Right, East -> Back, East
-
-    | _ -> raise (NotImplemented $"{location},{dir}")
-// rest is not implemented yet
 
 let nextStepWithinBounds (state: WalkState) =
     let last = state.Cube.SideLength - 1
@@ -114,12 +111,12 @@ let incomingPosDir (size: int) (edgePos: int) (inEdge: Direction) ((n, e): North
     let pos =
         match realEdge, posDir with // this is likely all wrong
         | North, East -> (edgePos, 0)
-        | North, West -> (size - 1 - edgePos, 0)
+        | North, West -> (edgePos, 0)
         | South, East -> (edgePos, size - 1)
-        | South, West -> (size - 1 - edgePos, size - 1)
-        | East, North -> (size - 1, size - 1 - edgePos)
+        | South, West -> (edgePos, size - 1)
+        | East, North -> (size - 1, edgePos)
         | East, South -> (size - 1, edgePos)
-        | West, North -> (0, size - 1 - edgePos)
+        | West, North -> (0, edgePos)
         | West, South -> (0, edgePos)
 
     (oppositeDirection realEdge), pos
@@ -134,35 +131,43 @@ let relativeFacing (facing: Direction) ((n, e): NorthEast) =
 let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Direction) =
     let fromNE = state.Side.NE
     let toNE = state.Cube.Sides[dest].NE
-    let adjustedEntryEdge = 
-        match entryEdge,toNE with
-        | North,(n,_) -> n
-        | South,(n,_) -> n |> oppositeDirection
-        | East,(_,e) -> e
-        | West,(_,e) -> e |> oppositeDirection
+
+    let adjustedEntryEdge =
+        match entryEdge, toNE with
+        | North, (n, _) -> n
+        | South, (n, _) -> n |> oppositeDirection
+        | East, (_, e) -> e
+        | West, (_, e) -> e |> oppositeDirection
+
     let isDiagonalMove =
-        match state.Facing,adjustedEntryEdge with
-        | ns,ew when (ns = North || ns = South ) -> ew = East || ew = West
-        | ew,ns when (ew = East || ew = West) -> ns = North || ns = South
+        match state.Facing, adjustedEntryEdge with
+        | ns, ew when (ns = North || ns = South) -> ew = East || ew = West
+        | ew, ns when (ew = East || ew = West) -> ns = North || ns = South
+
     let flippedOut =
-        match state.Facing,fromNE with
-        | ns,(x,y) when (ns = North || ns = South) -> x = West || y = West
-        | ew,(x,y) when (ew = East || ew = West) -> x = South || y = South
+        match state.Facing, fromNE with
+        | ns, (x, y) when (ns = North || ns = South) -> x = West || y = West
+        | ew, (x, y) when (ew = East || ew = West) -> x = North || y = North
+
     let flippedIn =
-        match entryEdge,fromNE with
-        | ns,(x,y) when (ns = North || ns = South) -> x = West || y = West
-        | ew,(x,y) when (ew = East || ew = West) -> x = South || y = South
-    let flip = isDiagonalMove <> flippedOut <> flippedIn 
-    printfn $"shouldFlipEntryPoint {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} diag={isDiagonalMove} flip={flip} {adjustedEntryEdge}"
+        match entryEdge, fromNE with
+        | ns, (x, y) when (ns = North || ns = South) -> x = West || y = West
+        | ew, (x, y) when (ew = East || ew = West) -> x = North || y = North
+
+    let flip = flippedOut <> flippedIn
+
+    printfn
+        $"shouldFlipEntryPoint {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} diag={isDiagonalMove} flip={flip} {adjustedEntryEdge}"
+
     flip
 
-let private step (state: WalkState) =
+let step (state: WalkState) =
     match state.Commands with
     | TurnRight :: rest ->
-        printfn $"Turn right at {state.Location} {state.Pos}"
+        printfn $"Turn right at {state.Location} {state.Pos} towards {state.Facing |> turnRight}"
         WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnRight)
     | TurnLeft :: rest ->
-        printfn $"Turn left at {state.Location} {state.Pos}"
+        printfn $"Turn left at {state.Location} {state.Pos} towards {state.Facing |> turnLeft}"
         WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnLeft)
     | Steps 0 :: rest -> WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
     | Steps n :: rest ->
@@ -171,7 +176,7 @@ let private step (state: WalkState) =
             // printfn $"safe: {state} step {n} -> {next}"
 
             if state.Cube.Sides[ state.Location ].Tiles.Contains next then
-                printfn $"Move to {next} {state.Location}"
+                // printfn $"Move to {next} {state.Location}"
                 WalkState(state.Cube, Steps(n - 1) :: rest, state.Location, next, state.Facing)
             else
                 printfn $"blocked by {next} {state.Location}"
@@ -179,16 +184,22 @@ let private step (state: WalkState) =
         else
             let relFacing = relativeFacing state.Facing state.NE
             let newLoc, newEdge = nextLocation state.Location relFacing
+            printfn $"nextLocation({state.Location},{relFacing} -> {newLoc},{newEdge}"
             let edgePos = getEdgePos state.Cube.SideLength state.Pos state.Facing state.NE
 
             let flip = shouldFlipEntryPoint state newLoc newEdge
-            let edgePos = if flip then state.Cube.SideLength - 1 - edgePos else edgePos 
+
+            let edgePos =
+                if flip then
+                    state.Cube.SideLength - 1 - edgePos
+                else
+                    edgePos
 
             let newDir, newPos =
                 incomingPosDir state.Cube.SideLength edgePos newEdge (state.Cube.Sides[newLoc].NE)
 
             if state.Cube.Sides[ newLoc ].Tiles.Contains newPos then
-                printfn $"Jumped to {newLoc} {newDir} {newPos}"
+                printfn $"Jumped from {state.Location}{state.Pos}{state.Facing} to {newLoc}{newPos}{newDir}"
                 WalkState(state.Cube, Steps(n - 1) :: rest, newLoc, newPos, newDir)
             else
                 printfn $"Blocked when trying to enter {newLoc} from {state}"
@@ -198,10 +209,12 @@ let walkAlongCube (cube: Cube) (commands: Command list) =
     let state = WalkState(cube, commands, Front, (0, 0), East)
 
     let rec nsteps (state: WalkState) =
-        if state.Commands.IsEmpty then state
-        else step state |> nsteps
+        if state.Commands.IsEmpty then
+            state
+        else
+            step state |> nsteps
 
     printfn $"State(Start) {state}"
-    let state = nsteps state
+    // let state = nsteps state
     printfn $"State(End) {state}"
     state
