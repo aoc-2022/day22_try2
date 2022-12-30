@@ -210,12 +210,13 @@ let walkAlongCube (cube: Cube) (commands: Command list) =
     let state = WalkState(cube, commands, Front, (0, 0), East)
 
     let rec nsteps (state: WalkState) =
+        printfn $"commands: ${state.Commands}"
         if state.Commands.IsEmpty then
             state
         else
             step state |> nsteps
 
     printfn $"State(Start) {state}"
-    // let state = nsteps state
+    let state = nsteps state
     printfn $"State(End) {state}"
     state
