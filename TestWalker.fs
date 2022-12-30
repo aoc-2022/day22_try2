@@ -46,8 +46,25 @@ let testLocation (state: WalkState) (location: Location) =
     verifyPos 5 rsv tsv
     printfn "##########################################"
 
+let testEquator (state:WalkState) =
+    let state = WalkState(state.Cube,[Steps 16],Front, (2,2),East)
+    let final = nsteps state
+    printfn $"- - - - -- testEquator from: {state.Pos} to:{final.Pos}"
 
+let testNorth (state:WalkState) =
+    let state = WalkState(state.Cube,[TurnLeft;Steps 16],Front, (2,2),East)
+    let final = nsteps state
+    printfn $"-- -- - -- testNorth from: {state.Pos} to:{final.Pos}"
+ 
+let testSENorth (state:WalkState) =
+    let state = WalkState(state.Cube,[Steps 4;TurnLeft;Steps 16;TurnLeft;Steps 4],Front, (2,2),East)
+    let final = nsteps state
+    printfn $"i------ testSENorth from: {state.Pos} to:{final.Pos}"
+    
 let testAll (state: WalkState) =
     let locations = state.Cube.Sides.Keys |> Seq.toList
     locations |> List.map (testLocation state)
-    // testLocation state Bottom 
+    // testLocation state Left
+    // testEquator state
+    // testNorth state
+    // testSENorth state 

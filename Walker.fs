@@ -139,11 +139,6 @@ let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Directi
         | East, (_, e) -> e
         | West, (_, e) -> e |> oppositeDirection
 
-    let isDiagonalMove =
-        match state.Facing, adjustedEntryEdge with
-        | ns, ew when (ns = North || ns = South) -> ew = East || ew = West
-        | ew, ns when (ew = East || ew = West) -> ns = North || ns = South
-
     let flippedOut =
         match state.Facing, fromNE with
         | ns, (x, y) when (ns = North || ns = South) -> x = West || y = West
@@ -156,8 +151,8 @@ let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Directi
 
     let flip = flippedOut <> flippedIn
 
-    printfn $"shouldFlipEntryPoint(1) {dest}:{entryEdge} adj:{adjustedEntryEdge} {toNE} {flippedIn}"
-    printfn $"shouldFlipEntryPoint(2) {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} diag={isDiagonalMove} flip={flip} {adjustedEntryEdge}"
+    // printfn $"shouldFlipEntryPoint(1) {dest}:{entryEdge} adj:{adjustedEntryEdge} {toNE} {flippedIn}"
+    // printfn $"shouldFlipEntryPoint(2) {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} flip={flip} {adjustedEntryEdge}"
 
     flip
 
@@ -210,7 +205,6 @@ let walkAlongCube (cube: Cube) (commands: Command list) =
     let state = WalkState(cube, commands, Front, (0, 0), East)
 
     let rec nsteps (state: WalkState) =
-        printfn $"commands: ${state.Commands}"
         if state.Commands.IsEmpty then
             state
         else
