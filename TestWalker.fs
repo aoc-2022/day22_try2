@@ -47,24 +47,40 @@ let testLocation (state: WalkState) (location: Location) =
     printfn "##########################################"
 
 let testEquator (state:WalkState) =
-    let state = WalkState(state.Cube,[Steps 16],Front, (2,2),East)
+    let state = WalkState(state.Cube,[Steps (4*state.Cube.SideLength)],Front, (2,2),East)
     let final = nsteps state
-    printfn $"- - - - -- testEquator from: {state.Pos} to:{final.Pos}"
+    printfn $"- - - - -- testEquator from: {state.Location}:{state.Pos} to:{final.Location}:{final.Pos}"
 
 let testNorth (state:WalkState) =
-    let state = WalkState(state.Cube,[TurnLeft;Steps 16],Front, (2,2),East)
+    let state = WalkState(state.Cube,[TurnLeft;Steps (4*state.Cube.SideLength)],Front, (2,2),East)
     let final = nsteps state
-    printfn $"-- -- - -- testNorth from: {state.Pos} to:{final.Pos}"
+    printfn $"-- -- - -- testNorth from: {state.Location}{state.Pos} to:{final.Location}{final.Pos}"
  
 let testSENorth (state:WalkState) =
-    let state = WalkState(state.Cube,[Steps 4;TurnLeft;Steps 16;TurnLeft;Steps 4],Front, (2,2),East)
+    let state = WalkState(state.Cube,[Steps state.Cube.SideLength;TurnLeft;Steps (4*state.Cube.SideLength);TurnLeft;Steps state.Cube.SideLength],Front, (2,2),East)
     let final = nsteps state
-    printfn $"i------ testSENorth from: {state.Pos} to:{final.Pos}"
+    printfn $"i------ testSENorth from: {state.Location}{state.Pos} to:{final.Location}{final.Pos}"
+ 
+ 
+let testCorner (state:WalkState) (location:Location) =
+    let y1 = 5
+    let x1 = 2
+    let x2 = state.Cube.SideLength - 3
+    let pos = (x2,y1)
+    let stepN = Steps state.Cube.SideLength
+    let commands = [stepN;TurnLeft;stepN;TurnLeft;stepN;TurnLeft]
+    let state = WalkState(state.Cube,commands,location,pos,East)
+    let state2 = nsteps state
+    printfn $"testCorner(1): {state}"
+    printfn $"testCorner(2): {state2}"
+    
+    
     
 let testAll (state: WalkState) =
     let locations = state.Cube.Sides.Keys |> Seq.toList
     locations |> List.map (testLocation state)
-    // testLocation state Left
+    // testLocation state Top 
     // testEquator state
     // testNorth state
-    // testSENorth state 
+    // testSENorth state
+    // testCorner state Front 

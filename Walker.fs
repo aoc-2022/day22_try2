@@ -25,6 +25,15 @@ let turnRight (direction: Direction) =
     | West -> North
     | North -> East
 
+let isMirrored (ne: NorthEast) =
+    printfn $"isMirrored {ne}"
+
+    match ne with
+    | North, ew -> ew = West
+    | South, ew -> ew = East
+    | East, sw -> sw = South
+    | West, sw -> sw = North
+
 let turnLeft (direction: Direction) =
     match direction with
     | East -> North
@@ -121,12 +130,41 @@ let incomingPosDir (size: int) (edgePos: int) (inEdge: Direction) ((n, e): North
 
     (oppositeDirection realEdge), pos
 
+
+// let relativeFacing (facing: Direction) ((n, e): NorthEast) =
+//     let relFacing =
+//         match facing with
+//         | North -> n
+//         | South -> n |> oppositeDirection
+//         | East -> e
+//         | West -> e |> oppositeDirection
+//
+//     printfn $"relativeFacing {facing} {(n, e)} -> {relFacing}"
+//     relFacing
 let relativeFacing (facing: Direction) ((n, e): NorthEast) =
-    match facing with
-    | North -> n
-    | South -> n |> oppositeDirection
-    | East -> e
-    | West -> e |> oppositeDirection
+    let relFacing =
+        match facing with
+        | North -> n
+        | South -> n |> oppositeDirection
+        | East -> e
+        | West -> e |> oppositeDirection
+    printfn $"relativeFacing {facing} {(n, e)} -> {relFacing}"
+    relFacing
+
+let reverseNE (n,e) =
+    let n1 =
+        match (n,e) with
+        | North,_ -> North
+        | South,_ -> South
+        | _,North -> East
+        | _,South -> West
+    let e1 =
+        match (n,e) with
+        | East,_ -> North
+        | West,_ -> South
+        | _,East -> East
+        | _,West -> West
+    (n1,e1)
 
 let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Direction) =
     let fromNE = state.Side.NE
@@ -153,17 +191,27 @@ let shouldFlipEntryPoint (state: WalkState) (dest: Location) (entryEdge: Directi
 
     // printfn $"shouldFlipEntryPoint(1) {dest}:{entryEdge} adj:{adjustedEntryEdge} {toNE} {flippedIn}"
     // printfn $"shouldFlipEntryPoint(2) {fromNE}:{state.Facing}->{toNE}:{entryEdge}  {dest} :: flipped out={flippedOut} in={flippedIn} flip={flip} {adjustedEntryEdge}"
-
     flip
 
 let step (state: WalkState) =
     match state.Commands with
     | TurnRight :: rest ->
-        printfn $"Turn right at {state.Location} {state.Pos} towards {state.Facing |> turnRight}"
-        WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnRight)
+        printfn $"Turn right at {state.Location}:{state.Facing} {state.Pos} towards {state.Facing |> turnRight}"
+        let facing = state.Facing |> turnRight
+
+        // let facing = if isMirrored state.Side.NE then oppositeDirection facing else facing
+        // printfn $"isMirrored: {state.Location} {isMirrored state.Side.NE}"
+        WalkState(state.Cube, rest, state.Location, state.Pos, facing)
     | TurnLeft :: rest ->
-        printfn $"Turn left at {state.Location} {state.Pos} towards {state.Facing |> turnLeft}"
-        WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing |> turnLeft)
+        printfn
+            $"Turn left at {state.Location} {state.Location}:{state.Facing} {state.Pos} towards {state.Facing |> turnLeft}"
+
+        let facing = state.Facing |> turnLeft
+
+        // let facing = if isMirrored state.Side.NE then oppositeDirection facing else facing
+
+        // printfn $"*** isMirrored: {state.Location} {isMirrored state.Side.NE}"
+        WalkState(state.Cube, rest, state.Location, state.Pos, facing)
     | Steps 0 :: rest -> WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
     | Steps n :: rest ->
         if nextStepWithinBounds state then
@@ -171,16 +219,18 @@ let step (state: WalkState) =
             // printfn $"safe: {state} step {n} -> {next}"
 
             if state.Cube.Sides[ state.Location ].Tiles.Contains next then
-                // printfn $"Move to {next} {state.Location}"
+                printfn $"Move to {next} {state.Location}"
                 WalkState(state.Cube, Steps(n - 1) :: rest, state.Location, next, state.Facing)
             else
                 printfn $"blocked by {next} {state.Location}"
                 WalkState(state.Cube, rest, state.Location, state.Pos, state.Facing)
         else
-            let relFacing = relativeFacing state.Facing state.NE
+            let revNE = state.NE |> reverseNE 
+            let relFacing = relativeFacing state.Facing revNE
+            printfn $"facing: {state.Facing} relFacing={relFacing}"
             let newLoc, newEdge = nextLocation state.Location relFacing
             printfn $"nextLocation({state.Location},{relFacing} -> {newLoc},{newEdge}"
-            let edgePos = getEdgePos state.Cube.SideLength state.Pos state.Facing state.NE
+            let edgePos = getEdgePos state.Cube.SideLength state.Pos state.Facing revNE 
 
             let flip = shouldFlipEntryPoint state newLoc newEdge
 

@@ -93,7 +93,7 @@ let rec expand (cube:Cube) (quadrant:Quadrant) =
             let south = fst left.NE |> oppositeDirection |> stepDir pos
             let cube = addSideIfPossible cube quadrant Back leftDir left.NE
             let cube = addSideIfPossible cube quadrant Front right (fst left.NE, snd left.NE |> oppositeDirection)
-            let cube = addSideIfPossible cube quadrant Top north (snd left.NE |> oppositeDirection, fst left.NE)
+            let cube = addSideIfPossible cube quadrant Top north (snd left.NE, fst left.NE)
             let cube = addSideIfPossible cube quadrant Bottom south (snd left.NE, fst left.NE |> oppositeDirection)
             expand1 cube rest
         | Right :: rest ->
